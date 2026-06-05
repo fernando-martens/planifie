@@ -1,0 +1,14 @@
+node_modules/
+dist/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Tauri / Rust
+src-tauri/target/
+
+# misc
+*.local
+.DS_Store
