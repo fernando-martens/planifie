@@ -10,14 +10,10 @@ interface Props {
   onSelect: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
-  onDragStart: (id: string) => void;
-  onDragOver: (id: string) => void;
-  onDrop: (id: string | null) => void;
-  isDragOver: boolean;
 }
 
 export function TaskItem({
-  task, tags, active, onSelect, onRename, onDelete, onDragStart, onDragOver, onDrop, isDragOver,
+  task, tags, active, onSelect, onRename, onDelete,
 }: Props) {
   const [renaming, setRenaming] = useState(false);
   const [val, setVal] = useState(task.title);
@@ -54,28 +50,12 @@ export function TaskItem({
 
   return (
     <button
-      className={"task-item" + (active ? " active" : "") + (isDragOver ? " drag-over" : "")}
+      className={"task-item" + (active ? " active" : "")}
       data-testid="task-item"
       data-task-title={task.title || "Untitled task"}
       data-active={active ? "1" : undefined}
       onClick={() => onSelect(task.id)}
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.effectAllowed = "move";
-        onDragStart(task.id);
-      }}
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = "move";
-        onDragOver(task.id);
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDrop(task.id);
-      }}
-      onDragEnd={() => onDrop(null)}
     >
-      <span className="task-drag-handle"><Icons.more size={11} /></span>
       <span className="task-dots">
         {taskTags.slice(0, 3).map((t) => (
           <span key={t.id} className="task-dot" style={{ background: colorHex(t.color) }} />

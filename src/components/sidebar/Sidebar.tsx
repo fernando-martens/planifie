@@ -26,7 +26,6 @@ export function Sidebar({ onDeleteTask, onNewWorkspace, onEditWorkspace }: Props
   const setQuery = useTaskStore((s) => s.setQuery);
   const selectTask = useTaskStore((s) => s.selectTask);
   const renameTask = useTaskStore((s) => s.renameTask);
-  const reorderTask = useTaskStore((s) => s.reorderTask);
   const newTask = useTaskStore((s) => s.newTask);
 
   const tags = useTagStore((s) => s.tags);
@@ -132,7 +131,6 @@ export function Sidebar({ onDeleteTask, onNewWorkspace, onEditWorkspace }: Props
         onSelect={selectTask}
         onRename={renameTask}
         onDelete={onDeleteTask}
-        onReorder={reorderTask}
       />
 
       <div

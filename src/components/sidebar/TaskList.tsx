@@ -1,4 +1,3 @@
-import { useState } from "react";
 import type { Tag, Task, NoteContent, TimerContent, DocContent } from "../../types";
 import { groupTasks } from "../../lib/time";
 import { TaskItem } from "./TaskItem";
@@ -11,7 +10,6 @@ interface Props {
   onSelect: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
-  onReorder: (dragId: string, targetId: string) => void;
 }
 
 function matchesQuery(t: Task, tags: Tag[], q: string): boolean {
@@ -31,16 +29,7 @@ function matchesQuery(t: Task, tags: Tag[], q: string): boolean {
   });
 }
 
-export function TaskList({ tasks, tags, activeTask, query, onSelect, onRename, onDelete, onReorder }: Props) {
-  const [dragId, setDragId] = useState<string | null>(null);
-  const [overId, setOverId] = useState<string | null>(null);
-
-  const handleDrop = (targetId: string | null) => {
-    if (dragId && targetId && dragId !== targetId) onReorder(dragId, targetId);
-    setDragId(null);
-    setOverId(null);
-  };
-
+export function TaskList({ tasks, tags, activeTask, query, onSelect, onRename, onDelete }: Props) {
   const q = query.trim().toLowerCase();
   const filtered = !q ? tasks : tasks.filter((t) => matchesQuery(t, tags, q));
 
@@ -63,10 +52,6 @@ export function TaskList({ tasks, tags, activeTask, query, onSelect, onRename, o
               onSelect={onSelect}
               onRename={onRename}
               onDelete={onDelete}
-              onDragStart={setDragId}
-              onDragOver={setOverId}
-              onDrop={handleDrop}
-              isDragOver={!!dragId && overId === t.id && dragId !== t.id}
             />
           ))}
         </div>

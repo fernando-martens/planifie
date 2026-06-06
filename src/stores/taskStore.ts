@@ -18,7 +18,6 @@ interface TaskState {
   newTask: () => Promise<string>;
   renameTask: (id: string, title: string) => Promise<void>;
   setTaskDate: (id: string, ts: number) => Promise<void>;
-  reorderTask: (dragId: string, targetId: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
 
   toggleTag: (taskId: string, tagId: string) => Promise<void>;
@@ -78,20 +77,6 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     const adapter = await getAdapter();
     await adapter.updateTask(id, { created_at: ts });
     set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, created_at: ts } : t)) }));
-  },
-
-  reorderTask: async (dragId, targetId) => {
-    const list = [...get().tasks];
-    const fromIdx = list.findIndex((t) => t.id === dragId);
-    const toIdx = list.findIndex((t) => t.id === targetId);
-    if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return;
-    const [moved] = list.splice(fromIdx, 1);
-    const anchor = list[Math.min(toIdx, list.length - 1)];
-    moved.created_at = anchor.created_at;
-    list.splice(toIdx, 0, moved);
-    set({ tasks: list });
-    const adapter = await getAdapter();
-    await adapter.updateTask(moved.id, { created_at: moved.created_at });
   },
 
   deleteTask: async (id) => {
