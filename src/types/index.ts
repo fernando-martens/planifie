@@ -59,6 +59,9 @@ export interface TimerContent {
 
 export interface DocContent {
   title: string;
+  /** BlockNote document (PartialBlock[]) — source of truth. */
+  blocks: unknown[];
+  /** Derived markdown cache for export and preview. */
   markdown: string;
 }
 

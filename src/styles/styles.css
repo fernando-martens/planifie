@@ -582,10 +582,32 @@ button { font-family: inherit; cursor: pointer; }
 .doc-toolbar .sep { width: 1px; height: 16px; background: var(--doc-edge); margin: 0 4px; }
 .doc-toolbar .spacer { flex: 1; }
 
+/* BlockNote editor — map its CSS variables onto the app theme tokens.
+   `.bn-container` raises specificity above BlockNote's own theme defaults. */
 .doc-editor {
   font-family: var(--font-serif); font-size: 15px; line-height: 1.65; color: var(--text);
   outline: none; min-height: 60px;
 }
+.doc-editor.bn-container {
+  --bn-colors-editor-text: var(--text);
+  --bn-colors-editor-background: transparent;
+  --bn-colors-menu-text: var(--text);
+  --bn-colors-menu-background: var(--surface);
+  --bn-colors-tooltip-text: var(--text);
+  --bn-colors-tooltip-background: var(--surface);
+  --bn-colors-hovered-text: var(--text);
+  --bn-colors-hovered-background: var(--surface);
+  --bn-colors-selected-text: var(--text);
+  --bn-colors-selected-background: var(--doc-edge);
+  --bn-colors-disabled-text: var(--text-3);
+  --bn-colors-disabled-background: var(--surface);
+  --bn-colors-border: var(--border);
+  --bn-colors-side-menu: var(--text-3);
+  --bn-colors-shadow: rgba(0,0,0,.12);
+  --bn-font-family: var(--font-serif);
+}
+/* BlockNote adds its own page padding; the .doc-fs-page already provides it. */
+.doc-editor .bn-editor { padding-inline: 0; }
 .doc-editor:focus { box-shadow: none; }
 .doc-editor h1 { font-size: 22px; font-weight: 600; margin: 4px 0 8px; letter-spacing: -.01em; line-height: 1.25; }
 .doc-editor h2 { font-size: 18px; font-weight: 600; margin: 18px 0 6px; letter-spacing: -.01em; }
@@ -791,6 +813,12 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
   padding: 12px 14px; max-height: 150px; overflow: auto; white-space: pre-wrap;
 }
+.export-error {
+  margin-top: 10px; padding: 9px 12px; border-radius: 8px; font-size: 12.5px;
+  color: #b4543f; background: color-mix(in oklab, #b4543f 10%, transparent);
+  border: 1px solid color-mix(in oklab, #b4543f 30%, transparent);
+}
+[data-theme="dark"] .export-error { color: #e0917a; }
 .danger { color: #b4543f; }
 [data-theme="dark"] .danger { color: #d98064; }
 .btn.danger-btn { color: #b4543f; border-color: transparent; background: transparent; }

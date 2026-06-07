@@ -1,8 +1,11 @@
 import { useEffect, useRef } from "react";
-import { Crepe } from "@milkdown/crepe";
-import "@milkdown/crepe/theme/common/style.css";
-import "@milkdown/crepe/theme/frame.css";
+import { BlockNoteView } from "@blocknote/mantine";
+import { useCreateBlockNote } from "@blocknote/react";
+import type { PartialBlock } from "@blocknote/core";
+import "@blocknote/core/fonts/inter.css";
+import "@blocknote/mantine/style.css";
 import type { Block, DocContent } from "../../types";
+import { useThemeStore } from "../../stores/themeStore";
 import { Icons } from "../ui/Icons";
 
 interface Props {
@@ -13,37 +16,59 @@ interface Props {
   onExport: (block: Block) => void;
 }
 
-export function DocFullscreen({ block, backLabel, onClose, onChange, onExport }: Props) {
-  const c = block.content as DocContent;
-  const rootRef = useRef<HTMLDivElement>(null);
+/** BlockNote editor for a single doc. Re-mounted per block via `key`. */
+function DocEditor({
+  block,
+  onChange,
+}: {
+  block: Block;
+  onChange: (content: Partial<DocContent>) => void;
+}) {
+  const theme = useThemeStore((s) => s.theme);
+  const initial = (block.content as DocContent).blocks;
+
+  const editor = useCreateBlockNote({
+    initialContent: initial && initial.length ? (initial as PartialBlock[]) : undefined,
+  });
 
   // Keep the latest onChange without re-creating the editor on every render.
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
-  // Mount Milkdown's Crepe editor (all features enabled) for the active doc.
-  // Re-created only when the open block changes, so typing never resets it.
+  // Persist blocks (source of truth) + derived markdown cache, debounced.
   useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    const crepe = new Crepe({
-      root,
-      defaultValue: (block.content as DocContent).markdown || "",
-    });
-    crepe.on((listener) => {
-      listener.markdownUpdated((_ctx, markdown) => {
-        onChangeRef.current({ markdown });
-      });
-    });
-    const ready = crepe.create();
-
-    return () => {
-      // Destroy only after creation settles to avoid tearing down mid-init.
-      void ready.then(() => crepe.destroy()).catch(() => {});
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let pending = false;
+    const persist = () => {
+      pending = false;
+      const blocks = editor.document;
+      const markdown = editor.blocksToMarkdownLossy(blocks);
+      onChangeRef.current({ blocks, markdown });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [block.id]);
+    const unsub = editor.onChange(() => {
+      pending = true;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(persist, 300);
+    });
+    return () => {
+      if (timer) clearTimeout(timer);
+      if (pending) persist(); // flush the final edit when the doc closes
+      unsub?.();
+    };
+  }, [editor]);
+
+  return (
+    <BlockNoteView
+      editor={editor}
+      theme={theme}
+      className="doc-editor"
+      data-testid="doc-editor"
+    />
+  );
+}
+
+export function DocFullscreen({ block, backLabel, onClose, onChange, onExport }: Props) {
+  const c = block.content as DocContent;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -78,7 +103,7 @@ export function DocFullscreen({ block, backLabel, onClose, onChange, onExport }:
             placeholder="Untitled document"
             onChange={(e) => onChange({ title: e.target.value })}
           />
-          <div className="doc-crepe" data-testid="doc-editor" ref={rootRef} />
+          <DocEditor key={block.id} block={block} onChange={onChange} />
         </div>
       </div>
     </div>
