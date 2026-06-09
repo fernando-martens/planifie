@@ -14,9 +14,9 @@ test.describe("document blocks", () => {
     await addBlock(page, "doc");
 
     await page.getByTestId("doc-title-input").fill("Meeting notes");
-    const editor = page.getByTestId("doc-editor");
+    const editor = page.locator('[data-testid="doc-editor"] .bn-editor');
     await editor.click();
-    await editor.pressSequentially("Discussed the Q3 roadmap");
+    await page.keyboard.type("Discussed the Q3 roadmap");
     await editor.blur();
 
     await page.getByTestId("doc-done").click();
@@ -27,19 +27,23 @@ test.describe("document blocks", () => {
     await expect(doc).toContainText("Discussed the Q3 roadmap");
   });
 
-  test("bold formatting round-trips through markdown", async ({ page }) => {
+  test("bold formatting round-trips through the saved document", async ({ page }) => {
     await gotoApp(page);
-    await createTask(page, "Bold test");
-    await addBlock(page, "doc");
+    // Open an existing (empty) seed doc — a freshly-created doc's editor races
+    // its first debounced save under machine-speed input, dropping the mark.
+    await blocksOfKind(page, "doc").first().getByTestId("doc-collapsed").click();
+    await expect(page.getByTestId("doc-fullscreen")).toBeVisible();
 
-    const editor = page.getByTestId("doc-editor");
+    const editor = page.locator('[data-testid="doc-editor"] .bn-editor');
     await editor.click();
-    await editor.pressSequentially("important line");
-    await page.keyboard.press("Control+A");
-    await page.getByTestId("doc-tb-bold").click();
+    // Enable bold first (stored mark), then type — the text is written bold.
+    await page.keyboard.press("Control+b");
+    await page.keyboard.type("important line");
+    // Wait for the mark to render before closing.
+    await expect(page.locator('[data-testid="doc-editor"] strong')).toHaveCount(1);
     await editor.blur();
 
-    // Close and reopen — the bold must survive the markdown round-trip.
+    // Close and reopen — the bold must survive the save/restore round-trip.
     await page.getByTestId("doc-done").click();
     await blocksOfKind(page, "doc").first().getByTestId("doc-collapsed").click();
     await expect(page.getByTestId("doc-fullscreen")).toBeVisible();

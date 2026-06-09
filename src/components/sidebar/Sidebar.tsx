@@ -66,7 +66,7 @@ export function Sidebar({ onDeleteTask, onNewWorkspace, onEditWorkspace }: Props
     <aside className="sidebar">
       <div className="sb-head">
         <div className="wordmark">
-          <span className="mark"><Icons.layers size={13} /></span>
+          <img className="mark" src="/planifie-logo.svg" alt="planifie logo" width={22} height={22} />
           planifie
         </div>
         <ThemeToggle />

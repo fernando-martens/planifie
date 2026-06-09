@@ -164,11 +164,9 @@ button { font-family: inherit; cursor: pointer; }
   font-weight: 700; font-size: 15.5px; letter-spacing: -.01em;
 }
 .wordmark .mark {
-  width: 22px; height: 22px; border-radius: 6px;
-  background: var(--accent); color: var(--accent-ink);
-  display: grid; place-items: center; flex: none;
+  width: 22px; height: 22px; border-radius: 6px; flex: none;
+  display: block; object-fit: contain;
 }
-.wordmark .mark svg { width: 13px; height: 13px; }
 
 .icon-btn {
   appearance: none; border: 1px solid transparent; background: transparent;
@@ -582,10 +580,35 @@ button { font-family: inherit; cursor: pointer; }
 .doc-toolbar .sep { width: 1px; height: 16px; background: var(--doc-edge); margin: 0 4px; }
 .doc-toolbar .spacer { flex: 1; }
 
+/* BlockNote editor — map its CSS variables onto the app theme tokens.
+   `.bn-container` raises specificity above BlockNote's own theme defaults. */
 .doc-editor {
-  font-family: var(--font-serif); font-size: 15px; line-height: 1.65; color: var(--text);
+  font-family: var(--font-ui); font-size: 15px; line-height: 1.65; color: var(--text);
   outline: none; min-height: 60px;
 }
+/* The document body itself reads as a manuscript (serif); BlockNote's UI
+   chrome — slash menu, toolbars, tooltips — stays on the app UI font. */
+.doc-editor .bn-editor { font-family: var(--font-serif); }
+.doc-editor.bn-container {
+  --bn-colors-editor-text: var(--text);
+  --bn-colors-editor-background: transparent;
+  --bn-colors-menu-text: var(--text);
+  --bn-colors-menu-background: var(--surface);
+  --bn-colors-tooltip-text: var(--text);
+  --bn-colors-tooltip-background: var(--surface);
+  --bn-colors-hovered-text: var(--text);
+  --bn-colors-hovered-background: var(--surface);
+  --bn-colors-selected-text: var(--text);
+  --bn-colors-selected-background: var(--doc-edge);
+  --bn-colors-disabled-text: var(--text-3);
+  --bn-colors-disabled-background: var(--surface);
+  --bn-colors-border: var(--border);
+  --bn-colors-side-menu: var(--text-3);
+  --bn-colors-shadow: rgba(0,0,0,.12);
+  --bn-font-family: var(--font-ui);
+}
+/* BlockNote adds its own page padding; the .doc-fs-page already provides it. */
+.doc-editor .bn-editor { padding-inline: 0; }
 .doc-editor:focus { box-shadow: none; }
 .doc-editor h1 { font-size: 22px; font-weight: 600; margin: 4px 0 8px; letter-spacing: -.01em; line-height: 1.25; }
 .doc-editor h2 { font-size: 18px; font-weight: 600; margin: 18px 0 6px; letter-spacing: -.01em; }
@@ -791,6 +814,12 @@ button { font-family: inherit; cursor: pointer; }
   background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
   padding: 12px 14px; max-height: 150px; overflow: auto; white-space: pre-wrap;
 }
+.export-error {
+  margin-top: 10px; padding: 9px 12px; border-radius: 8px; font-size: 12.5px;
+  color: #b4543f; background: color-mix(in oklab, #b4543f 10%, transparent);
+  border: 1px solid color-mix(in oklab, #b4543f 30%, transparent);
+}
+[data-theme="dark"] .export-error { color: #e0917a; }
 .danger { color: #b4543f; }
 [data-theme="dark"] .danger { color: #d98064; }
 .btn.danger-btn { color: #b4543f; border-color: transparent; background: transparent; }
@@ -819,10 +848,28 @@ button { font-family: inherit; cursor: pointer; }
 [data-theme="dark"] .date-field input[type="datetime-local"] { background: rgba(255,255,255,.04); color-scheme: dark; }
 .date-field input:focus { border-color: var(--timer-dot); }
 .date-arrow { font-size: 14px; color: var(--text-3); padding-bottom: 8px; }
+
+/* large, centered duration editor */
+.dur-edit {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 8px 0 2px;
+}
+.dur-input-lg {
+  width: 88px; padding: 6px 8px; border-radius: var(--r-md);
+  border: 1px solid var(--timer-edge); background: var(--surface); color: var(--text);
+  font-family: var(--font-mono); font-size: 34px; font-weight: 500;
+  letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  text-align: center; outline: none; -moz-appearance: textfield;
+}
+[data-theme="dark"] .dur-input-lg { background: rgba(255,255,255,.04); color-scheme: dark; }
+.dur-input-lg::-webkit-outer-spin-button,
+.dur-input-lg::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.dur-input-lg:focus { border-color: var(--timer-dot); }
+.dur-unit-lg { font-size: 18px; font-weight: 500; color: var(--text-3); }
 .timer-edit-preview {
   font-family: var(--font-mono); font-size: 12px; color: var(--timer-ink); font-weight: 500;
 }
-.timer-edit-actions { display: flex; gap: 8px; }
+.timer-edit-actions { display: flex; gap: 8px; justify-content: flex-end; }
 .timer-clickable { cursor: pointer; border-radius: 6px; }
 .timer-edit-hint { opacity: 0; color: var(--text-3); transition: opacity .12s; display: inline-flex; }
 .tl-row:hover .timer-edit-hint { opacity: .8; }

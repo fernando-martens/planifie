@@ -132,7 +132,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     let content: BlockContent;
     if (type === "note") content = { text: "" };
     else if (type === "timer") content = { label: presetLabel || "", status: "idle" };
-    else content = { title: "", markdown: "" };
+    else content = { title: "", blocks: [], markdown: "" };
     const block = await adapter.createBlock({ task_id: taskId, type, ts: Date.now(), content });
     set((s) => ({
       tasks: s.tasks.map((t) => (t.id === taskId ? { ...t, blocks: [...t.blocks, block] } : t)),

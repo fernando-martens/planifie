@@ -23,6 +23,15 @@
         { "path": "$DOCUMENT/**" },
         { "path": "$DESKTOP/**" }
       ]
+    },
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [
+        { "path": "$HOME/**" },
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DESKTOP/**" }
+      ]
     }
   ]
 }

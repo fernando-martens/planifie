@@ -15,11 +15,17 @@
     "tauri:build": "tauri build"
   },
   "dependencies": {
-    "@milkdown/crepe": "^7.21.2",
+    "@blocknote/core": "^0.51.4",
+    "@blocknote/mantine": "^0.51.4",
+    "@blocknote/react": "^0.51.4",
+    "@mantine/core": "^8.3.18",
+    "@mantine/hooks": "^8.3.18",
     "@tauri-apps/api": "^2.1.1",
     "@tauri-apps/plugin-dialog": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
     "@tauri-apps/plugin-sql": "^2.2.0",
+    "jspdf": "^4.2.1",
+    "marked": "^18.0.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^5.0.2"

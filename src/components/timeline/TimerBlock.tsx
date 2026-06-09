@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ActiveTimer, Block, TimerContent } from "../../types";
 import { Icons } from "../ui/Icons";
-import { clockOf, formatClock, formatDuration, localToTs, tsToLocal } from "../../lib/time";
+import { clockOf, formatClock, formatDuration } from "../../lib/time";
 
 interface Props {
   block: Block;
@@ -24,27 +24,26 @@ export function TimerBlock({ block, active, elapsedMs, onStart, onPause, onResum
   const [editing, setEditing] = useState(false);
   const editRef = useRef<HTMLDivElement>(null);
   const [label, setLabel] = useState(c.label || "");
-  const [startStr, setStartStr] = useState("");
-  const [endStr, setEndStr] = useState("");
+  const [durH, setDurH] = useState("0");
+  const [durM, setDurM] = useState("0");
 
   const openEdit = () => {
     setLabel(c.label || "");
-    const st = block.ts;
-    const en = isFinished ? st + (c.duration_ms || 0) : st;
-    setStartStr(tsToLocal(st));
-    setEndStr(tsToLocal(en));
+    const totalMin = Math.round((c.duration_ms || 0) / 60000);
+    setDurH(String(Math.floor(totalMin / 60)));
+    setDurM(String(totalMin % 60));
     setEditing(true);
   };
 
+  const editDurMs = (() => {
+    const h = Math.max(0, parseInt(durH, 10) || 0);
+    const m = Math.max(0, parseInt(durM, 10) || 0);
+    return (h * 3600 + m * 60) * 1000;
+  })();
+
   const save = () => {
-    const startTs = localToTs(startStr);
-    const endTs = localToTs(endStr);
-    if (!startTs || !endTs) {
-      setEditing(false);
-      return;
-    }
-    const dur = Math.max(0, endTs - startTs);
-    onChange({ label: label.trim(), __ts: startTs, duration_ms: dur, status: dur > 0 ? "finished" : c.status });
+    const dur = editDurMs;
+    onChange({ label: label.trim(), duration_ms: dur, status: dur > 0 ? "finished" : c.status });
     setEditing(false);
   };
 
@@ -67,13 +66,6 @@ export function TimerBlock({ block, active, elapsedMs, onStart, onPause, onResum
     return () => document.removeEventListener("mousedown", onDown);
   }, [editing]);
 
-  const previewDur = (() => {
-    const a = localToTs(startStr);
-    const b = localToTs(endStr);
-    if (!a || !b || b <= a) return null;
-    return formatDuration(b - a);
-  })();
-
   if (editing) {
     return (
       <div className="timer-edit" data-testid="timer-edit" ref={editRef}>
@@ -89,20 +81,29 @@ export function TimerBlock({ block, active, elapsedMs, onStart, onPause, onResum
             if (e.key === "Escape") setEditing(false);
           }}
         />
-        <div className="timer-edit-row">
-          <div className="timer-edit-dates">
-            <div className="date-field">
-              <label>Start</label>
-              <input type="datetime-local" data-testid="timer-edit-start" value={startStr} onChange={(e) => setStartStr(e.target.value)} />
-            </div>
-            <span className="date-arrow">→</span>
-            <div className="date-field">
-              <label>End</label>
-              <input type="datetime-local" data-testid="timer-edit-end" value={endStr} min={startStr} onChange={(e) => setEndStr(e.target.value)} />
-            </div>
-          </div>
+        <div className="dur-edit">
+          <input
+            type="number"
+            min={0}
+            className="dur-input-lg"
+            data-testid="timer-edit-dur-h"
+            value={durH}
+            onChange={(e) => setDurH(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") save(); }}
+          />
+          <span className="dur-unit-lg">h</span>
+          <input
+            type="number"
+            min={0}
+            max={59}
+            className="dur-input-lg"
+            data-testid="timer-edit-dur-m"
+            value={durM}
+            onChange={(e) => setDurM(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") save(); }}
+          />
+          <span className="dur-unit-lg">m</span>
         </div>
-        {previewDur && <div className="timer-edit-preview">Duration: {previewDur}</div>}
         <div className="timer-edit-actions">
           <button className="t-ctrl" data-testid="timer-edit-cancel" onClick={() => setEditing(false)}>Cancel</button>
           <button className="t-ctrl solid" data-testid="timer-edit-save" onClick={save}>

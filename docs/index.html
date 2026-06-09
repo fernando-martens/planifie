@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Planifie — sua timeline de trabalho, num só lugar</title>
+    <meta
+      name="description"
+      content="Planifie é um app de planejamento desktop que reúne timers, notas e documentos numa linha do tempo por tarefa. Local-first, com exportação em Markdown e PDF."
+    />
+    <link rel="icon" type="image/svg+xml" href="./planifie-logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Newsreader:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --font-ui: "Hanken Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+        --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+        --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+        --bg: #faf8f4;
+        --surface: #ffffff;
+        --surface-2: #f2efe8;
+        --border: #e8e3d9;
+        --border-strong: #d9d3c6;
+        --text: #211e18;
+        --text-2: #6b6458;
+        --text-3: #a8a092;
+        --accent: #3231bc;
+
+        --note-dot: #c2a158;
+        --note-bg: #fbf5e9;
+        --note-edge: #e7d6b0;
+        --timer-dot: #7e96b4;
+        --timer-bg: #edf1f6;
+        --timer-edge: #cbd7e5;
+        --doc-dot: #82a983;
+        --doc-bg: #ecf2ec;
+        --doc-edge: #c9dbc9;
+
+        --r-md: 12px;
+        --r-lg: 18px;
+      }
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        font-family: var(--font-ui);
+        background: var(--bg);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+        line-height: 1.5;
+      }
+
+      a { color: inherit; }
+
+      .wrap {
+        max-width: 1080px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* ---------- Nav ---------- */
+      header.nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: -0.01em;
+        text-decoration: none;
+      }
+      .brand img { width: 30px; height: 30px; border-radius: 8px; }
+      .nav-links { display: flex; align-items: center; gap: 28px; }
+      .nav-links a {
+        text-decoration: none;
+        color: var(--text-2);
+        font-size: 14.5px;
+        font-weight: 600;
+        transition: color 0.15s;
+      }
+      .nav-links a:hover { color: var(--text); }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 20px;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 14.5px;
+        text-decoration: none;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: transform 0.12s, box-shadow 0.15s, background 0.15s;
+      }
+      .btn.primary { background: var(--accent); color: #fff; }
+      .btn.primary:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(50, 49, 188, 0.28); }
+      /* The sticky header's backdrop-filter clips large shadows into a hard
+         "ghost" rectangle, so give the nav button a flat darken on hover. */
+      .nav .btn.primary:hover { transform: none; box-shadow: none; background: #2a29a6; color: #fff; }
+      .btn.ghost { background: var(--surface); color: var(--text); border-color: var(--border-strong); }
+      .btn.ghost:hover { background: var(--surface-2); }
+      @media (max-width: 680px) { .nav-links a:not(.btn) { display: none; } }
+
+      /* ---------- Hero ---------- */
+      .hero { padding: 88px 0 72px; text-align: center; }
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 100px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        font-size: 12.5px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: var(--text-2);
+        text-transform: uppercase;
+      }
+      .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--doc-dot); }
+      .hero h1 {
+        font-size: clamp(38px, 6vw, 62px);
+        line-height: 1.04;
+        letter-spacing: -0.03em;
+        margin: 24px auto 0;
+        max-width: 14ch;
+        font-weight: 800;
+      }
+      .hero h1 em { font-family: var(--font-serif); font-style: italic; font-weight: 500; color: var(--accent); }
+      .hero p.lede {
+        font-size: clamp(17px, 2.2vw, 20px);
+        color: var(--text-2);
+        max-width: 56ch;
+        margin: 22px auto 0;
+      }
+      .hero-cta { display: flex; gap: 14px; justify-content: center; margin-top: 34px; flex-wrap: wrap; }
+      .hero-note { margin-top: 16px; font-size: 13px; color: var(--text-3); }
+
+      /* ---------- Mock timeline ---------- */
+      .mock {
+        margin: 64px auto 0;
+        max-width: 720px;
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: var(--r-lg);
+        box-shadow: 0 30px 80px -30px rgba(33, 30, 24, 0.28);
+        overflow: hidden;
+        text-align: left;
+      }
+      .mock-bar {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 13px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--surface-2);
+      }
+      .mock-bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--border-strong); display: inline-block; }
+      .mock-bar span { margin-left: 8px; font-size: 12.5px; color: var(--text-3); font-weight: 600; }
+      .mock-body { padding: 22px; display: grid; gap: 14px; }
+      .blk {
+        display: flex;
+        gap: 14px;
+        padding: 15px 16px;
+        border-radius: var(--r-md);
+        border: 1px solid;
+        align-items: flex-start;
+      }
+      .blk .ic {
+        flex: none;
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        font-weight: 700;
+      }
+      .blk .meta { min-width: 0; }
+      .blk .ttl { font-weight: 700; font-size: 14.5px; }
+      .blk .sub { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+      .blk .time { margin-left: auto; font-family: var(--font-mono); font-size: 12.5px; color: var(--text-3); }
+      .blk.note { background: var(--note-bg); border-color: var(--note-edge); }
+      .blk.note .ic { background: var(--note-dot); }
+      .blk.timer { background: var(--timer-bg); border-color: var(--timer-edge); }
+      .blk.timer .ic { background: var(--timer-dot); }
+      .blk.doc { background: var(--doc-bg); border-color: var(--doc-edge); }
+      .blk.doc .ic { background: var(--doc-dot); }
+
+      /* ---------- Sections ---------- */
+      section { padding: 80px 0; }
+      .sec-head { text-align: center; max-width: 60ch; margin: 0 auto 52px; }
+      .sec-head h2 {
+        font-size: clamp(28px, 4vw, 40px);
+        letter-spacing: -0.02em;
+        margin: 0;
+        font-weight: 800;
+      }
+      .sec-head p { color: var(--text-2); font-size: 17px; margin: 14px auto 0; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: 28px;
+        transition: transform 0.15s, box-shadow 0.18s, border-color 0.18s;
+      }
+      .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 18px 40px -22px rgba(33, 30, 24, 0.3);
+        border-color: var(--border-strong);
+      }
+      .card .ic {
+        width: 46px;
+        height: 46px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        margin-bottom: 18px;
+      }
+      .card h3 { margin: 0 0 8px; font-size: 18.5px; letter-spacing: -0.01em; }
+      .card p { margin: 0; color: var(--text-2); font-size: 14.5px; }
+      .ic-note { background: var(--note-bg); border: 1px solid var(--note-edge); }
+      .ic-timer { background: var(--timer-bg); border: 1px solid var(--timer-edge); }
+      .ic-doc { background: var(--doc-bg); border: 1px solid var(--doc-edge); }
+      .ic-accent { background: #ececfa; border: 1px solid #d4d4f5; }
+
+      /* alternating band */
+      .band { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+      .split { display: grid; grid-template-columns: 1.1fr 1fr; gap: 56px; align-items: center; }
+      @media (max-width: 860px) { .split { grid-template-columns: 1fr; gap: 32px; } }
+      .split h2 { font-size: clamp(26px, 3.5vw, 36px); letter-spacing: -0.02em; margin: 0 0 16px; }
+      .feature-list { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 14px; }
+      .feature-list li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; color: var(--text-2); }
+      .feature-list .chk {
+        flex: none; width: 22px; height: 22px; border-radius: 50%;
+        background: var(--accent); color: #fff; display: grid; place-items: center;
+        font-size: 12px; font-weight: 800; margin-top: 1px;
+      }
+      .feature-list b { color: var(--text); font-weight: 700; }
+
+      .pill-row { display: flex; flex-wrap: wrap; gap: 10px; }
+      .pill {
+        padding: 9px 15px; border-radius: 100px; background: var(--surface);
+        border: 1px solid var(--border-strong); font-size: 13.5px; font-weight: 600; color: var(--text-2);
+        display: inline-flex; align-items: center; gap: 8px;
+      }
+      .pill .d { width: 9px; height: 9px; border-radius: 50%; }
+
+      /* ---------- CTA ---------- */
+      .cta-box {
+        background: var(--accent);
+        border-radius: 24px;
+        padding: 64px 32px;
+        text-align: center;
+        color: #fff;
+        background-image: radial-gradient(circle at 20% 0%, rgba(255,255,255,0.14), transparent 45%);
+      }
+      .cta-box h2 { font-size: clamp(28px, 4vw, 42px); margin: 0; letter-spacing: -0.02em; }
+      .cta-box p { color: rgba(255,255,255,0.82); font-size: 17px; margin: 14px auto 30px; max-width: 48ch; }
+      .cta-box .btn.primary { background: #fff; color: var(--accent); }
+      .cta-box .btn.primary:hover { box-shadow: 0 8px 22px rgba(0,0,0,0.2); }
+
+      /* ---------- Footer ---------- */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 40px 0;
+        margin-top: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        color: var(--text-3);
+        font-size: 13.5px;
+      }
+      footer .brand { font-size: 16px; }
+    </style>
+  </head>
+  <body>
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href="#top">
+          <img src="./planifie-logo.svg" alt="Planifie" />
+          Planifie
+        </a>
+        <nav class="nav-links">
+          <a href="#features">Recursos</a>
+          <a href="#blocks">Blocos</a>
+          <a href="#export">Exportação</a>
+          <a class="btn primary" href="https://github.com/fernando-martens/planifie">GitHub ↗</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <!-- HERO -->
+      <section class="hero">
+        <div class="wrap">
+          <span class="eyebrow"><span class="dot"></span> App desktop · local-first</span>
+          <h1>Sua jornada de trabalho numa <em>linha do tempo</em></h1>
+          <p class="lede">
+            O Planifie reúne <b>timers</b>, <b>notas</b> e <b>documentos</b> numa timeline por tarefa.
+            Organize tudo em workspaces, marque com tags e exporte quando quiser — sem nuvem, seus dados ficam com você.
+          </p>
+          <div class="hero-cta">
+            <a class="btn primary" href="https://github.com/fernando-martens/planifie">Ver no GitHub</a>
+            <a class="btn ghost" href="#features">Conhecer os recursos</a>
+          </div>
+          <p class="hero-note">Construído com Tauri + React · Windows, macOS e Linux</p>
+
+          <!-- mock timeline -->
+          <div class="mock">
+            <div class="mock-bar">
+              <i></i><i></i><i></i>
+              <span>Planifie — Redesign do onboarding</span>
+            </div>
+            <div class="mock-body">
+              <div class="blk note">
+                <div class="ic">✎</div>
+                <div class="meta">
+                  <div class="ttl">Nota rápida</div>
+                  <div class="sub">Validar fluxo com a equipe de produto antes de codar.</div>
+                </div>
+                <div class="time">09:12</div>
+              </div>
+              <div class="blk timer">
+                <div class="ic">◷</div>
+                <div class="meta">
+                  <div class="ttl">Foco — Wireframes</div>
+                  <div class="sub">Duração: 1h 25min · concluído</div>
+                </div>
+                <div class="time">09:30</div>
+              </div>
+              <div class="blk doc">
+                <div class="ic">▤</div>
+                <div class="meta">
+                  <div class="ttl">Documento — Especificação v2</div>
+                  <div class="sub">Editor rico com blocos, listas e formatação.</div>
+                </div>
+                <div class="time">11:05</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BLOCKS -->
+      <section id="blocks" class="band">
+        <div class="wrap">
+          <div class="sec-head">
+            <h2>Três blocos, uma timeline</h2>
+            <p>Cada tarefa é uma linha do tempo construída com os blocos de que você precisa, na ordem em que aconteceram.</p>
+          </div>
+          <div class="grid">
+            <div class="card">
+              <div class="ic ic-timer">◷</div>
+              <h3>Timer</h3>
+              <p>Inicie, pause, retome e finalize cronômetros com rótulos. Uma barra flutuante mostra o timer ativo e leva você direto até ele. Salve presets para os timers que mais usa.</p>
+            </div>
+            <div class="card">
+              <div class="ic ic-note">✎</div>
+              <h3>Nota</h3>
+              <p>Capture ideias e lembretes em segundos. Notas curtas ficam registradas no momento exato em que surgiram, dentro da timeline da tarefa.</p>
+            </div>
+            <div class="card">
+              <div class="ic ic-doc">▤</div>
+              <h3>Documento</h3>
+              <p>Um editor rico (BlockNote) com títulos, listas, blocos e formatação. Abra em tela cheia para escrever especificações, atas e anotações longas.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEATURES split -->
+      <section id="features">
+        <div class="wrap split">
+          <div>
+            <h2>Organização que acompanha seu ritmo</h2>
+            <p style="color: var(--text-2); font-size: 16px;">
+              Separe contextos em workspaces, encontre qualquer tarefa pela busca e dê cor às coisas com tags.
+            </p>
+            <ul class="feature-list">
+              <li><span class="chk">✓</span> <span><b>Workspaces coloridos</b> para separar projetos, clientes ou áreas da vida.</span></li>
+              <li><span class="chk">✓</span> <span><b>Tags</b> com cores para classificar e filtrar suas tarefas.</span></li>
+              <li><span class="chk">✓</span> <span><b>Busca instantânea</b> na barra lateral para chegar onde você precisa.</span></li>
+              <li><span class="chk">✓</span> <span><b>Tema claro e escuro</b> em paleta quente, fácil para os olhos.</span></li>
+            </ul>
+          </div>
+          <div>
+            <div class="pill-row">
+              <span class="pill"><span class="d" style="background:#3231bc"></span> Pessoal</span>
+              <span class="pill"><span class="d" style="background:#7e96b4"></span> Trabalho</span>
+              <span class="pill"><span class="d" style="background:#82a983"></span> Estudos</span>
+              <span class="pill"><span class="d" style="background:#c2a158"></span> Side project</span>
+              <span class="pill"><span class="d" style="background:#b08aa6"></span> Cliente A</span>
+              <span class="pill"><span class="d" style="background:#c98a8a"></span> Urgente</span>
+            </div>
+            <div class="mock" style="margin-top: 22px; max-width: none; box-shadow: 0 18px 50px -28px rgba(33,30,24,.3);">
+              <div class="mock-body" style="gap: 10px;">
+                <div class="blk note" style="padding: 12px 14px;">
+                  <div class="ic" style="width:28px;height:28px;font-size:14px;">✎</div>
+                  <div class="meta"><div class="ttl" style="font-size:13.5px;">Daily da manhã</div></div>
+                  <div class="time">08:45</div>
+                </div>
+                <div class="blk timer" style="padding: 12px 14px;">
+                  <div class="ic" style="width:28px;height:28px;font-size:14px;">◷</div>
+                  <div class="meta"><div class="ttl" style="font-size:13.5px;">Deep work</div></div>
+                  <div class="time">52:10</div>
+                </div>
+                <div class="blk doc" style="padding: 12px 14px;">
+                  <div class="ic" style="width:28px;height:28px;font-size:14px;">▤</div>
+                  <div class="meta"><div class="ttl" style="font-size:13.5px;">Retro da sprint</div></div>
+                  <div class="time">16:20</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- EXPORT + LOCAL -->
+      <section id="export" class="band">
+        <div class="wrap">
+          <div class="sec-head">
+            <h2>Seus dados, do seu jeito</h2>
+            <p>Local-first por padrão, com exportação limpa para levar seu conteúdo a qualquer lugar.</p>
+          </div>
+          <div class="grid">
+            <div class="card">
+              <div class="ic ic-accent">⤓</div>
+              <h3>Exporte em Markdown</h3>
+              <p>Transforme uma tarefa inteira — ou um único documento — em Markdown pronto para usar em qualquer editor.</p>
+            </div>
+            <div class="card">
+              <div class="ic ic-accent">▦</div>
+              <h3>Exporte em PDF</h3>
+              <p>Gere PDFs com <b>texto selecionável</b> de verdade (não imagem), com formatação preservada de títulos, listas e código.</p>
+            </div>
+            <div class="card">
+              <div class="ic ic-accent">⛁</div>
+              <h3>Armazenamento local</h3>
+              <p>Tudo fica num banco SQLite na sua máquina via Tauri. Sem conta, sem nuvem, sem rastreio. Rápido e privado.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section>
+        <div class="wrap">
+          <div class="cta-box">
+            <h2>Comece a registrar seu trabalho</h2>
+            <p>O Planifie é open source. Confira o código, acompanhe o desenvolvimento ou rode você mesmo.</p>
+            <a class="btn primary" href="https://github.com/fernando-martens/planifie">Acessar o repositório ↗</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap" style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:16px;">
+        <a class="brand" href="#top" style="text-decoration:none;">
+          <img src="./planifie-logo.svg" alt="Planifie" style="width:26px;height:26px;border-radius:7px;" />
+          Planifie
+        </a>
+        <span>Feito com Tauri + React · © 2026 Fernando Martens</span>
+        <a href="https://github.com/fernando-martens/planifie" style="text-decoration:none; font-weight:600;">GitHub ↗</a>
+      </div>
+    </footer>
+  </body>
+</html>

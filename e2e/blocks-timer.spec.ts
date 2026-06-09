@@ -41,7 +41,7 @@ test.describe("timer blocks", () => {
     await expect(timer.getByTestId("timer-duration")).toContainText("1m 00s");
   });
 
-  test("edit an idle timer's start/end to log a finished duration", async ({ page }) => {
+  test("edit an idle timer's start + duration to log a finished duration", async ({ page }) => {
     await gotoAppWithClock(page);
     await addTimerPreset(page, "Studying");
 
@@ -49,8 +49,8 @@ test.describe("timer blocks", () => {
     await timer.getByTestId("timer-edit-open").click();
 
     await expect(page.getByTestId("timer-edit")).toBeVisible();
-    await page.getByTestId("timer-edit-start").fill("2025-03-01T10:00");
-    await page.getByTestId("timer-edit-end").fill("2025-03-01T11:30");
+    await page.getByTestId("timer-edit-dur-h").fill("1");
+    await page.getByTestId("timer-edit-dur-m").fill("30");
     await page.getByTestId("timer-edit-save").click();
 
     await expect(timer.getByTestId("timer-main")).toHaveAttribute("data-timer-status", "finished");

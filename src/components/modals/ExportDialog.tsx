@@ -14,6 +14,8 @@ export function ExportDialog({ task, presetBlock, onClose }: Props) {
   const tags = useTagStore((s) => s.tags);
   const [scope] = useState<ExportScope>(presetBlock ? "block" : "task");
   const [format, setFormat] = useState<"markdown" | "pdf">("markdown");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const md = buildMarkdown({ scope, task, tags, block: presetBlock });
   const scopeLabel =
@@ -22,17 +24,27 @@ export function ExportDialog({ task, presetBlock, onClose }: Props) {
       : `the document “${presetBlock ? (presetBlock.content as DocContent).title : ""}”`;
 
   const doExport = async () => {
-    if (format === "markdown") {
-      const base =
-        scope === "block" && presetBlock
-          ? (presetBlock.content as DocContent).title || "document"
-          : task.title || "task";
-      const filename = `${base.replace(/[^\w.-]+/g, "-")}.md`;
-      await exportMarkdown(filename, md);
-    } else {
-      exportToPdf();
+    const base =
+      scope === "block" && presetBlock
+        ? (presetBlock.content as DocContent).title || "document"
+        : task.title || "task";
+    const stem = base.replace(/[^\w.-]+/g, "-");
+    setBusy(true);
+    setError(null);
+    try {
+      if (format === "markdown") {
+        await exportMarkdown(`${stem}.md`, md);
+      } else {
+        await exportToPdf(`${stem}.pdf`, md);
+      }
+      onClose();
+    } catch (e) {
+      // Surface failures (e.g. missing fs permission) instead of failing silently.
+      console.error("Export failed:", e);
+      setError(e instanceof Error ? e.message : "Could not save the file.");
+    } finally {
+      setBusy(false);
     }
-    onClose();
   };
 
   return (
@@ -62,12 +74,17 @@ export function ExportDialog({ task, presetBlock, onClose }: Props) {
             <div className="field-label">Preview</div>
             <div className="export-preview scroll" data-testid="export-preview">{md || "Nothing to export."}</div>
           </div>
+          {error && (
+            <div className="export-error" data-testid="export-error" role="alert">
+              {error}
+            </div>
+          )}
         </div>
         <div className="modal-foot">
           <button className="btn ghost" data-testid="export-cancel" onClick={onClose}>Cancel</button>
           <div className="right">
-            <button className="btn primary" data-testid="export-confirm" onClick={() => void doExport()}>
-              <Icons.share size={14} /> Export {format === "markdown" ? ".md" : ".pdf"}
+            <button className="btn primary" data-testid="export-confirm" disabled={busy} onClick={() => void doExport()}>
+              <Icons.share size={14} /> {busy ? "Saving…" : `Export ${format === "markdown" ? ".md" : ".pdf"}`}
             </button>
           </div>
         </div>

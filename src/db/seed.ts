@@ -22,65 +22,10 @@ function at(dayOffset: number, h: number, m: number): number {
 
 const NOW = Date.now();
 
-const SPEC_MD = `# Export module — scope & format
-
-The export dialog lets the user pick **what** to export and **how**.
-
-## Scope
-- **Whole task** — every block in this task's timeline
-- **One document** — a single \`doc\` block, raw markdown
-
-## Format
-Markdown is produced by direct serialization. PDF mirrors the timeline visual: timestamps, type labels, rendered content.
-
-> Decision: ship Markdown first, PDF behind it.`;
-
-const ROADMAP_MD = `# Q3 roadmap — working notes
-
-Three bets for the quarter, in priority order.
-
-1. **Sync foundation** — land the StorageAdapter boundary
-2. **Export** — Markdown + PDF, ship behind a flag
-3. **Search** — full-text over history (stretch)
-
-## Open questions
-- Do we version blocks for conflict resolution?
-- How aggressive is the local cache?`;
-
-const HIGHLIGHTS_MD = `# Highlights — Thinking in Systems
-
-> A system is an interconnected set of elements coherently organized to achieve something.
-
-Key idea from ch.3: **stocks** are the memory of a system, **flows** change them over time.
-
-- Stocks buffer flows and create stability
-- Delays make systems oscillate`;
-
-const REVIEW_MD = `# Weekly review
-
-- Shipped the timeline rail
-- Behind on export — pull forward
-
-> Energy was uneven. Protect mornings.`;
-
-const TRIP_MD = `# Lisbon — 4 days
-
-## Must do
-- Time-out Market
-- Belém (pastéis!)
-- Tram 28 early, before crowds
-
-## Stay
-Alfama or Príncipe Real. Walkable, hilly.`;
-
-const KICKOFF_MD = `# Project kickoff
-
-Scope, milestones, owners. Keep the MVP honest.
-
-## Milestones
-1. Data model + adapter
-2. Timeline UI
-3. Export`;
+/** A doc seed starts empty — BlockNote is the source of truth, filled in-app. */
+function emptyDoc(title: string): BlockContent {
+  return { title, blocks: [], markdown: "" };
+}
 
 interface SeedSpec {
   id: string;
@@ -121,7 +66,7 @@ export function buildSeed(): SeedData {
         { type: "note", ts: at(0, 8, 52), content: { text: "Morning intention: ship the export module today. Coffee, standup, then heads-down." } },
         { type: "timer", ts: at(0, 9, 15), content: { label: "Deep work", duration_ms: 4990000, status: "finished" } },
         { type: "note", ts: at(0, 10, 45), content: { text: "Standup: backend sync blocked on auth-token refresh — Maya's on it. I'm unblocked on the timeline UI." } },
-        { type: "doc", ts: at(0, 11, 30), content: { title: "Export module — spec v2", markdown: SPEC_MD } },
+        { type: "doc", ts: at(0, 11, 30), content: emptyDoc("Export module — spec v2") },
         { type: "timer", ts: at(0, 14, 10), content: { label: "Pairing w/ Sam", duration_ms: 2820000, status: "finished" } },
         { type: "timer", ts: NOW - 6 * 60 * 1000, content: { label: "Writing changelog", status: "finished", duration_ms: 360000 } },
       ],
@@ -130,7 +75,7 @@ export function buildSeed(): SeedData {
       id: "task-roadmap", workspace_id: "ws-work", title: "Q3 roadmap planning", created_at: at(0, 9, 25),
       tags: ["tag-work"],
       blocks: [
-        { type: "doc", ts: at(0, 9, 30), content: { title: "Q3 roadmap — working notes", markdown: ROADMAP_MD } },
+        { type: "doc", ts: at(0, 9, 30), content: emptyDoc("Q3 roadmap — working notes") },
         { type: "note", ts: at(0, 13, 5), content: { text: "Reviewed PRs #441, #442 — merged both. Left a note on migration ordering in #443." } },
         { type: "timer", ts: at(0, 15, 20), content: { label: "Design review", duration_ms: 1920000, status: "finished" } },
       ],
@@ -140,7 +85,7 @@ export function buildSeed(): SeedData {
       tags: ["tag-reading", "tag-personal"],
       blocks: [
         { type: "note", ts: at(0, 21, 30), content: { text: "Reading ch.3 — stocks and flows. Slow but worth it." } },
-        { type: "doc", ts: at(0, 21, 48), content: { title: "Highlights — Meadows", markdown: HIGHLIGHTS_MD } },
+        { type: "doc", ts: at(0, 21, 48), content: emptyDoc("Highlights — Meadows") },
       ],
     },
     {
@@ -148,7 +93,7 @@ export function buildSeed(): SeedData {
       tags: ["tag-personal"],
       blocks: [
         { type: "timer", ts: at(-1, 10, 0), content: { label: "Deep work", duration_ms: 5400000, status: "finished" } },
-        { type: "doc", ts: at(-1, 16, 20), content: { title: "Weekly review", markdown: REVIEW_MD } },
+        { type: "doc", ts: at(-1, 16, 20), content: emptyDoc("Weekly review") },
         { type: "note", ts: at(-1, 16, 40), content: { text: "Agreed with Priya to descope search from Q3." } },
       ],
     },
@@ -157,7 +102,7 @@ export function buildSeed(): SeedData {
       tags: ["tag-work"],
       blocks: [
         { type: "note", ts: at(-3, 14, 0), content: { text: "Drafted the architecture overview. Need a diagram." } },
-        { type: "doc", ts: at(-3, 15, 10), content: { title: "Architecture overview", markdown: "# Architecture\n\nClient → adapter → SQLite. Sync is a future adapter.\n\n- Never import SQLite directly\n- Everything flows through StorageAdapter" } },
+        { type: "doc", ts: at(-3, 15, 10), content: emptyDoc("Architecture overview") },
       ],
     },
     {
@@ -165,7 +110,7 @@ export function buildSeed(): SeedData {
       tags: ["tag-personal"],
       blocks: [
         { type: "note", ts: at(-5, 20, 0), content: { text: "Booked flights. Need to sort accommodation + a loose itinerary." } },
-        { type: "doc", ts: at(-5, 20, 30), content: { title: "Lisbon itinerary", markdown: TRIP_MD } },
+        { type: "doc", ts: at(-5, 20, 30), content: emptyDoc("Lisbon itinerary") },
       ],
     },
     {
@@ -173,7 +118,7 @@ export function buildSeed(): SeedData {
       tags: ["tag-work"],
       blocks: [
         { type: "timer", ts: at(-12, 9, 0), content: { label: "Kickoff meeting", duration_ms: 3600000, status: "finished" } },
-        { type: "doc", ts: at(-12, 10, 30), content: { title: "Kickoff notes", markdown: KICKOFF_MD } },
+        { type: "doc", ts: at(-12, 10, 30), content: emptyDoc("Kickoff notes") },
       ],
     },
     {
@@ -188,7 +133,7 @@ export function buildSeed(): SeedData {
       id: "task-goals", workspace_id: "ws-personal", title: "Year goals", created_at: at(-46, 11, 0),
       tags: ["tag-personal"],
       blocks: [
-        { type: "doc", ts: at(-46, 11, 0), content: { title: "2026 goals", markdown: "# 2026\n\n- Ship something I'm proud of\n- Read 20 books\n- Run a half marathon" } },
+        { type: "doc", ts: at(-46, 11, 0), content: emptyDoc("2026 goals") },
       ],
     },
   ];
