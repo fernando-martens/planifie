@@ -85,4 +85,4 @@ src-tauri/      Rust/Tauri desktop shell
 
 ## License
 
-Private project — all rights reserved.
+MIT License
