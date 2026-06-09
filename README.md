@@ -2,7 +2,6 @@
 
 <img src="./public/planifie-banner.svg" alt="planifie — timeline-based productivity & journaling" width="100%" />
 
-<br/>
 
 **A local-first desktop planner where every task is a living timeline.** 🌿
 
